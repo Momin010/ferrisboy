@@ -82,10 +82,10 @@ function ensureAudio() {
           audio._frac -= 1;
         }
       } else {
-        // Underrun: output silence and reset the resample phase.
+        // Underrun: output silence. Keep the resample phase (`_frac`) intact so
+        // playback resumes smoothly at non-44100 Hz contexts instead of clicking.
         outL[i] = 0;
         outR[i] = 0;
-        audio._frac = 0;
       }
     }
   };
@@ -145,8 +145,10 @@ function persistSaveIfDirty() {
     for (let i = 0; i < data.length; i++) bin += String.fromCharCode(data[i]);
     localStorage.setItem(saveKey, btoa(bin));
     emu.markSaved();
-  } catch (_) {
-    // localStorage may be full or disabled; skip silently.
+  } catch (err) {
+    // localStorage may be full or disabled — warn so progress loss isn't silent.
+    console.warn("ferrisboy: could not persist save to localStorage:", err);
+    setStatus("⚠ Save could not be stored (browser storage full or disabled).", true);
   }
 }
 

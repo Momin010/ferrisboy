@@ -70,11 +70,18 @@ impl GameBoy {
     }
 
     /// Run the system until the PPU finishes one full frame (~70224 T-cycles).
+    ///
+    /// A cycle cap guarantees this always returns: if the ROM disables the LCD
+    /// (in which case the PPU never signals a frame), it falls back to one
+    /// frame's worth of cycles rather than looping forever.
     pub fn run_frame(&mut self) {
+        const MAX_CYCLES_PER_FRAME: u32 = 70_224;
+        let mut elapsed: u32 = 0;
         loop {
             let cycles = self.cpu.step(&mut self.mmu);
             self.mmu.tick(cycles);
-            if self.mmu.ppu.take_frame_ready() {
+            elapsed += cycles;
+            if self.mmu.ppu.take_frame_ready() || elapsed >= MAX_CYCLES_PER_FRAME {
                 break;
             }
         }
@@ -88,7 +95,8 @@ impl GameBoy {
         cycles
     }
 
-    /// The current frame as 160×144 2-bit shade indices (0 = lightest .. 3 = darkest).
+    /// The current frame as 160×144 pixels, one byte per pixel holding a 2-bit
+    /// shade index (0 = lightest .. 3 = darkest). Length is `SCREEN_WIDTH * SCREEN_HEIGHT`.
     pub fn framebuffer(&self) -> &[u8] {
         self.mmu.ppu.framebuffer()
     }
@@ -99,7 +107,8 @@ impl GameBoy {
         ppu::shades_to_rgba(self.mmu.ppu.framebuffer(), out);
     }
 
-    /// Press or release a button. Raises a joypad interrupt on a fresh press.
+    /// Press or release a button. Raises a joypad interrupt on a fresh press,
+    /// but only when that button's line is currently selected via FF00.
     pub fn set_button(&mut self, button: Button, pressed: bool) {
         if self.mmu.joypad.set_button(button, pressed) {
             self.mmu.request_interrupt(interrupts::JOYPAD);

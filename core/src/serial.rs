@@ -7,6 +7,11 @@
 //!
 //! This component is simple enough that it is fully implemented here.
 
+/// Cap on the captured-output buffer (~64 KiB). A ROM that endlessly triggers
+/// serial transfers can't grow this without bound; the oldest half is dropped
+/// when the cap is hit. Far larger than any test ROM's real output.
+const MAX_OUTPUT: usize = 1 << 16;
+
 pub struct Serial {
     sb: u8,
     sc: u8,
@@ -38,6 +43,9 @@ impl Serial {
                 // Bit 7 = start, bit 0 = use internal clock. With no peer, the
                 // transfer completes at once; capture the byte for test output.
                 if val & 0x81 == 0x81 {
+                    if self.output.len() >= MAX_OUTPUT {
+                        self.output.drain(0..MAX_OUTPUT / 2);
+                    }
                     self.output.push(self.sb);
                     self.sb = 0xFF;
                     self.sc &= 0x7F; // clear the start bit
