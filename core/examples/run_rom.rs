@@ -18,8 +18,26 @@
 //! Exit code is 0 if no "Failed"/"Error" appeared in serial output, else 1 —
 //! so a shell loop can gate on Blargg results.
 
-use ferrisboy_core::{GameBoy, FRAMEBUFFER_RGBA_LEN, SCREEN_HEIGHT, SCREEN_WIDTH};
+use ferrisboy_core::{Button, GameBoy, FRAMEBUFFER_RGBA_LEN, SCREEN_HEIGHT, SCREEN_WIDTH};
 use std::process::ExitCode;
+
+/// Parse a `name@frame` input event, e.g. `start@200`. The button is held for
+/// ~12 frames starting at that frame, then released.
+fn parse_press(s: &str) -> Option<(u64, Button)> {
+    let (name, frame) = s.split_once('@')?;
+    let button = match name.to_ascii_lowercase().as_str() {
+        "right" => Button::Right,
+        "left" => Button::Left,
+        "up" => Button::Up,
+        "down" => Button::Down,
+        "a" => Button::A,
+        "b" => Button::B,
+        "select" => Button::Select,
+        "start" => Button::Start,
+        _ => return None,
+    };
+    Some((frame.parse().ok()?, button))
+}
 
 struct Opts {
     rom: String,
@@ -30,6 +48,7 @@ struct Opts {
     png: Option<String>,
     ascii: bool,
     quiet: bool,
+    presses: Vec<(u64, Button)>,
 }
 
 fn parse_opts() -> Opts {
@@ -43,6 +62,7 @@ fn parse_opts() -> Opts {
         png: None,
         ascii: false,
         quiet: false,
+        presses: Vec::new(),
     };
     while let Some(a) = args.next() {
         match a.as_str() {
@@ -53,6 +73,11 @@ fn parse_opts() -> Opts {
             "--png" => o.png = args.next(),
             "--ascii" => o.ascii = true,
             "--quiet" => o.quiet = true,
+            "--press" => {
+                if let Some((f, b)) = args.next().as_deref().and_then(parse_press) {
+                    o.presses.push((f, b));
+                }
+            }
             other => o.rom = other.to_string(),
         }
     }
@@ -89,7 +114,15 @@ fn main() -> ExitCode {
 
     if let Some(frames) = opts.frames {
         // Frame-based: requires a PPU that sets frame-ready.
-        for _ in 0..frames {
+        const HOLD: u64 = 12; // frames to hold each scripted button press
+        for frame in 0..frames {
+            for &(f, button) in &opts.presses {
+                if frame == f {
+                    gb.set_button(button, true);
+                } else if frame == f + HOLD {
+                    gb.set_button(button, false);
+                }
+            }
             gb.run_frame();
             append_serial(&mut serial, &mut gb);
         }
