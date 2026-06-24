@@ -31,10 +31,17 @@ impl Joypad {
         }
     }
 
-    /// Read FF00. Implemented by the Joypad task (combines `select` with the
-    /// selected nibble). Stub returns "nothing pressed".
+    /// Read FF00. Bits 4–5 select which nibble is exposed (active-low); the low
+    /// nibble reports the selected buttons (0 = pressed). Unused top bits read 1.
     pub fn read(&self) -> u8 {
-        0xFF
+        let mut low = 0x0F;
+        if self.select & 0x10 == 0 {
+            low &= self.dpad;
+        }
+        if self.select & 0x20 == 0 {
+            low &= self.buttons;
+        }
+        0xC0 | self.select | low
     }
 
     /// Write FF00 (only the line-select bits 4–5 are writable).
@@ -42,10 +49,37 @@ impl Joypad {
         self.select = val & 0x30;
     }
 
-    /// Update a button's state. Returns true if this transition should raise a
-    /// joypad interrupt (a selected line going high→low, i.e. a fresh press).
-    /// Implemented by the Joypad task.
-    pub fn set_button(&mut self, _button: Button, _pressed: bool) -> bool {
-        false
+    /// Update a button's state (active-low internally). Returns true if this is
+    /// a fresh press on a currently-selected line, which raises a joypad interrupt.
+    pub fn set_button(&mut self, button: Button, pressed: bool) -> bool {
+        let (nibble_is_dpad, bit) = match button {
+            Button::Right => (true, 0),
+            Button::Left => (true, 1),
+            Button::Up => (true, 2),
+            Button::Down => (true, 3),
+            Button::A => (false, 0),
+            Button::B => (false, 1),
+            Button::Select => (false, 2),
+            Button::Start => (false, 3),
+        };
+        let mask = 1u8 << bit;
+        let nibble = if nibble_is_dpad {
+            &mut self.dpad
+        } else {
+            &mut self.buttons
+        };
+        let was_pressed = *nibble & mask == 0;
+        if pressed {
+            *nibble &= !mask; // 0 = pressed
+        } else {
+            *nibble |= mask; // 1 = released
+        }
+        // Interrupt on a fresh press while this button's line is selected.
+        let line_selected = if nibble_is_dpad {
+            self.select & 0x10 == 0
+        } else {
+            self.select & 0x20 == 0
+        };
+        pressed && !was_pressed && line_selected
     }
 }
