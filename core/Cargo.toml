@@ -1,0 +1,25 @@
+[package]
+name = "ferrisboy-core"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "A Game Boy (DMG) emulator core in safe, dependency-free Rust."
+repository = "https://github.com/momin/ferrisboy"
+categories = ["emulators"]
+keywords = ["gameboy", "emulator", "dmg", "retro"]
+
+[lib]
+name = "ferrisboy_core"
+
+# Intentionally dependency-free: the core is pure logic with no I/O, so it
+# compiles unchanged for native and wasm32 targets.
+[dependencies]
+
+# Used only by the headless verification harness in `examples/`, never by the
+# library itself — the core stays dependency-free.
+[dev-dependencies]
+png = "0.17"
+
+[[example]]
+name = "run_rom"
+path = "examples/run_rom.rs"

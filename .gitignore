@@ -1,0 +1,22 @@
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# Emulator save files (battery-backed cartridge RAM)
+*.sav
+
+# Third-party test ROMs & generated resources (fetch via scripts/fetch-resources.sh)
+/test-roms/
+/resources/Opcodes.json
+
+# Headless verification artifacts
+/scratch/
+*.actual.png
+
+# macOS
+.DS_Store
+
+# Web build output
+/web/dist/
+/web/pkg/
