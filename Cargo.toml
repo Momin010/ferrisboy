@@ -1,7 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["core", "desktop"]
-# "web" is added once its crate exists (Phases 5).
+members = ["core", "desktop", "web"]
 
 [workspace.package]
 edition = "2021"

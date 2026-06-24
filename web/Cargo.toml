@@ -1,0 +1,20 @@
+[package]
+name = "ferrisboy-web"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "WebAssembly browser frontend for the ferrisboy Game Boy emulator."
+
+[lib]
+name = "ferrisboy_web"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ferrisboy-core = { path = "../core" }
+wasm-bindgen = "0.2.125"
+js-sys = "0.3.102"
+console_error_panic_hook = "0.1.7"
+
+[dependencies.web-sys]
+version = "0.3.102"
+features = ["console"]
