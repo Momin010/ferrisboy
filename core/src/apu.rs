@@ -816,7 +816,7 @@ impl Apu {
         // Length is clocked on FS steps 0, 2, 4, 6. The extra clock happens
         // when the *next* FS length tick is not imminent, i.e. the current step
         // is an odd one.
-        let length_clock_next = fs_step % 2 == 0;
+        let length_clock_next = fs_step.is_multiple_of(2);
         let mut hit_zero = false;
         if !was_enabled && enable && !length_clock_next && len.counter > 0 {
             len.counter -= 1;
@@ -829,7 +829,7 @@ impl Apu {
     /// On trigger with length enabled and counter reloaded to max during the
     /// first half, an extra clock occurs.
     fn trigger_length_quirk(len: &mut LengthCounter, fs_step: u8) {
-        let length_clock_next = fs_step % 2 == 0;
+        let length_clock_next = fs_step.is_multiple_of(2);
         if len.enabled && len.counter == len.max && !length_clock_next {
             len.counter -= 1;
         }

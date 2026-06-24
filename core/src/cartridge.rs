@@ -246,11 +246,10 @@ impl Cartridge {
             0x2000..=0x3FFF => self.bank_lo = (val & 0x7F) as u16,
             0x4000..=0x5FFF => self.bank_hi = val as u16, // 0–3 RAM bank, 8–C RTC reg
             0x6000..=0x7FFF => { /* RTC latch — RTC not yet ticked */ }
-            0xA000..=0xBFFF => {
-                if self.bank_hi <= 0x03 {
+            0xA000..=0xBFFF
+                if self.bank_hi <= 0x03 => {
                     self.write_ram(addr, val);
                 }
-            }
             _ => {}
         }
     }

@@ -192,11 +192,10 @@ impl Ppu {
             remaining -= step_amt;
 
             // Did we just cross into HBlank (end of drawing)? Render the line.
-            if mode == MODE_DRAW && self.mode_clock >= OAM_CYCLES + DRAW_CYCLES {
-                if self.ly < VBLANK_START_LINE {
+            if mode == MODE_DRAW && self.mode_clock >= OAM_CYCLES + DRAW_CYCLES
+                && self.ly < VBLANK_START_LINE {
                     self.render_scanline();
                 }
-            }
 
             // End of the scanline: advance LY and possibly the frame.
             if self.mode_clock >= LINE_CYCLES {
@@ -287,6 +286,9 @@ impl Ppu {
             let bg_map_base: u16 = if self.lcdc & 0x08 != 0 { 0x9C00 } else { 0x9800 };
             let win_map_base: u16 = if self.lcdc & 0x40 != 0 { 0x9C00 } else { 0x9800 };
 
+            // `x` is the screen coordinate, used for scroll/tile math as well as
+            // indexing, so a range loop is the clearest form here.
+            #[allow(clippy::needless_range_loop)]
             for x in 0..SCREEN_WIDTH {
                 let screen_x = x as i32;
                 let (map_base, map_x, map_y);

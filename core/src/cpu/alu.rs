@@ -244,7 +244,7 @@ impl Cpu {
     }
 
     pub(super) fn swap(&mut self, value: u8) -> u8 {
-        let result = (value >> 4) | (value << 4);
+        let result = value.rotate_left(4);
         self.reg.set_flag(FLAG_Z, result == 0);
         self.reg.set_flag(FLAG_N, false);
         self.reg.set_flag(FLAG_H, false);
