@@ -48,8 +48,10 @@ cargo run --release -p ferrisboy-desktop -- path/to/game.gb
 cargo run --release -p ferrisboy-desktop
 ```
 
-**Controls:** Arrow keys = D-pad · `Z` = A · `X` = B · `Enter` = Start · `Shift` = Select · `Esc` = quit.
-Battery saves are written next to the ROM as `<rom>.sav`.
+**Controls:** Arrow keys = D-pad · `Z` or `Space` = A (jump/confirm) · `X` = B · `Enter` = Start · `Shift` = Select · `P` = cycle palette (green / pocket / grayscale / dusk) · `Esc` = quit.
+Battery saves are written next to the ROM as `<rom>.sav`. (Click the window first so it has keyboard focus.)
+
+> On a Game Boy, "jump" isn't a dedicated key — it's the **A** button, and each game decides what A does. The D-pad's *up* is for climbing/menus, which is why Up doesn't jump. Mapping `Z`/`X` to A/B is the standard Game Boy-emulator convention; `Space` is added as a friendlier A.
 
 ### Browser (WebAssembly)
 

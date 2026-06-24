@@ -24,20 +24,13 @@ const FRAME_TIME: Duration = Duration::from_nanos(16_742_706);
 /// How often to flush a dirty battery save to disk.
 const SAVE_INTERVAL: Duration = Duration::from_secs(1);
 
-/// Classic DMG green palette, indexed by the core's 0..3 shade indices, packed
-/// as 0x00RRGGBB for minifb's u32 framebuffer.
-const PALETTE: [u32; 4] = [0x9B_BC_0F, 0x8B_AC_0F, 0x30_62_30, 0x0F_38_0F];
-
-/// Keyboard -> Game Boy button mapping, applied fresh every frame.
-const KEY_MAP: [(Key, Button); 8] = [
-    (Key::Right, Button::Right),
-    (Key::Left, Button::Left),
-    (Key::Up, Button::Up),
-    (Key::Down, Button::Down),
-    (Key::Z, Button::A),
-    (Key::X, Button::B),
-    (Key::Enter, Button::Start),
-    (Key::RightShift, Button::Select),
+/// Selectable display palettes, indexed by the core's 0..3 shade indices and
+/// packed as 0x00RRGGBB for minifb's u32 framebuffer. Cycle with the `P` key.
+const PALETTES: [(&str, [u32; 4]); 4] = [
+    ("DMG green", [0x9B_BC_0F, 0x8B_AC_0F, 0x30_62_30, 0x0F_38_0F]),
+    ("Pocket", [0xE0_F8_D0, 0x88_C0_70, 0x34_68_56, 0x08_18_20]),
+    ("Grayscale", [0xFF_FF_FF, 0xAA_AA_AA, 0x55_55_55, 0x00_00_00]),
+    ("Dusk", [0xFF_F6_D3, 0xF9_A8_75, 0xEB_6B_6F, 0x7C_3F_58]),
 ];
 
 fn main() {
@@ -88,9 +81,19 @@ fn run() -> Result<(), Box<dyn Error>> {
     let mut next_frame = Instant::now();
     let mut last_save = Instant::now();
     let mut pixels = vec![0u32; SCREEN_WIDTH * SCREEN_HEIGHT];
+    let mut palette_idx = 0usize;
+    let mut prev_palette_key = false;
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         forward_input(&window, &mut gb);
+
+        // `P` cycles the display palette (edge-triggered so one tap = one step).
+        let palette_key = window.is_key_down(Key::P);
+        if palette_key && !prev_palette_key {
+            palette_idx = (palette_idx + 1) % PALETTES.len();
+            println!("Palette: {}", PALETTES[palette_idx].0);
+        }
+        prev_palette_key = palette_key;
 
         gb.run_frame();
 
@@ -98,7 +101,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             push_audio(ring, gb.take_audio());
         }
 
-        render(&gb, &mut pixels, &mut window)?;
+        render(&gb, &mut pixels, &mut window, palette_idx)?;
 
         // Periodic battery save so progress survives a crash / force-quit.
         if last_save.elapsed() >= SAVE_INTERVAL {
@@ -137,11 +140,14 @@ fn print_banner(title: &str, rom_path: &Path) {
     println!("  ROM: {}", rom_path.display());
     println!("Controls:");
     println!("  D-pad ........ Arrow keys");
-    println!("  A ............ Z");
-    println!("  B ............ X");
+    println!("  A (jump) ..... Z  or  Space");
+    println!("  B ............ X  or  Left Shift");
     println!("  Start ........ Enter");
-    println!("  Select ....... Right Shift / Backspace");
+    println!("  Select ....... Right Shift  or  Backspace");
+    println!("  Palette ...... P  (cycles green / pocket / grayscale / dusk)");
     println!("  Quit ......... Esc");
+    println!();
+    println!("Tip: click the window first so it has keyboard focus.");
 }
 
 fn create_window(title: &str) -> Result<Window, Box<dyn Error>> {
@@ -169,24 +175,29 @@ fn create_window(title: &str) -> Result<Window, Box<dyn Error>> {
 }
 
 /// Set every button's pressed/released state from the current key state.
+/// Several keys can map to the same Game Boy button (e.g. A = Z *or* Space).
 fn forward_input(window: &Window, gb: &mut GameBoy) {
-    for (key, button) in KEY_MAP {
-        gb.set_button(button, window.is_key_down(key));
-    }
-    // Backspace is an alternate Select binding.
-    if window.is_key_down(Key::Backspace) {
-        gb.set_button(Button::Select, true);
-    }
+    let down = |keys: &[Key]| keys.iter().any(|&k| window.is_key_down(k));
+    gb.set_button(Button::Right, down(&[Key::Right]));
+    gb.set_button(Button::Left, down(&[Key::Left]));
+    gb.set_button(Button::Up, down(&[Key::Up]));
+    gb.set_button(Button::Down, down(&[Key::Down]));
+    gb.set_button(Button::A, down(&[Key::Z, Key::Space])); // A: jump/confirm
+    gb.set_button(Button::B, down(&[Key::X, Key::LeftShift]));
+    gb.set_button(Button::Start, down(&[Key::Enter]));
+    gb.set_button(Button::Select, down(&[Key::RightShift, Key::Backspace]));
 }
 
-/// Map the core's shade indices to ARGB and present the frame.
+/// Map the core's shade indices to ARGB (via the active palette) and present.
 fn render(
     gb: &GameBoy,
     pixels: &mut [u32],
     window: &mut Window,
+    palette_idx: usize,
 ) -> Result<(), Box<dyn Error>> {
+    let palette = &PALETTES[palette_idx].1;
     for (out, &shade) in pixels.iter_mut().zip(gb.framebuffer()) {
-        *out = PALETTE[(shade & 0x03) as usize];
+        *out = palette[(shade & 0x03) as usize];
     }
     window
         .update_with_buffer(pixels, SCREEN_WIDTH, SCREEN_HEIGHT)
