@@ -1,6 +1,6 @@
 # 🎮 ferrisboy
 
-A **Game Boy (DMG) emulator** written from scratch in safe, dependency-free Rust. The same emulator core runs as a **native macOS app** and, compiled to **WebAssembly**, **in the browser** — load a `.gb` ROM and play, with video, sound, input, and battery saves.
+A **Game Boy (DMG) emulator** written from scratch in safe, dependency-free Rust. The same emulator core runs as a **native macOS app** and, compiled to **WebAssembly**, **in the browser** - load a `.gb` ROM and play, with video, sound, input, and battery saves.
 
 <p align="center">
   <img src="docs/img/acid2-native.png" width="320" alt="dmg-acid2 rendered by ferrisboy (native)">
@@ -13,7 +13,7 @@ A **Game Boy (DMG) emulator** written from scratch in safe, dependency-free Rust
 
 Emulators are the same class of software as QEMU: a program that *impersonates* a piece of hardware so faithfully that software written for the real machine can't tell the difference. ferrisboy rebuilds the Game Boy's CPU, memory bus, LCD, sound chip, and cartridge mappers in software, then runs unmodified commercial ROMs against them.
 
-It's built to be **correct first** — validated against the same hardware test ROMs (Blargg, dmg-acid2) that real-hardware reverse-engineers use — and **portable second**: a pure-logic core with zero I/O dependencies, wrapped by thin platform frontends.
+It's built to be **correct first** - validated against the same hardware test ROMs (Blargg, dmg-acid2) that real-hardware reverse-engineers use - and **portable second**: a pure-logic core with zero I/O dependencies, wrapped by thin platform frontends.
 
 ## Accuracy
 
@@ -29,12 +29,12 @@ Verified against the standard Game Boy test-ROM suites:
 
 ## Features
 
-- **Full Sharp LR35902 CPU** — all 256 + 256 (CB-prefixed) opcodes, exact flags, interrupts, the `EI` delay, and the `HALT` bug.
-- **Scanline PPU** — background, window (with its own line counter), and sprites with the 10-per-line limit, X/OAM priority, 8×16 mode, flips, and OBJ-to-BG priority; STAT/LYC and VBlank interrupts.
-- **4-channel APU** — two square channels (sweep + envelope), wave, and noise, mixed and resampled to 44.1 kHz stereo `f32`.
-- **Cartridge mappers** — no-MBC, MBC1, MBC2, MBC3, MBC5, with banked external RAM and **battery-backed saves**.
-- **Two frontends from one core** — a native window (minifb + cpal) and a WebAssembly build (canvas + Web Audio).
-- **Safe Rust** — no `unsafe` in the emulator core, which is also **dependency-free** (the entire `core` crate has zero third-party dependencies).
+- **Full Sharp LR35902 CPU** - all 256 + 256 (CB-prefixed) opcodes, exact flags, interrupts, the `EI` delay, and the `HALT` bug.
+- **Scanline PPU** - background, window (with its own line counter), and sprites with the 10-per-line limit, X/OAM priority, 8×16 mode, flips, and OBJ-to-BG priority; STAT/LYC and VBlank interrupts.
+- **4-channel APU** - two square channels (sweep + envelope), wave, and noise, mixed and resampled to 44.1 kHz stereo `f32`.
+- **Cartridge mappers** - no-MBC, MBC1, MBC2, MBC3, MBC5, with banked external RAM and **battery-backed saves**.
+- **Two frontends from one core** - a native window (minifb + cpal) and a WebAssembly build (canvas + Web Audio).
+- **Safe Rust** - no `unsafe` in the emulator core, which is also **dependency-free** (the entire `core` crate has zero third-party dependencies).
 
 ## Run it
 
@@ -51,7 +51,7 @@ cargo run --release -p ferrisboy-desktop
 **Controls:** Arrow keys = D-pad · `Z` or `Space` = A (jump/confirm) · `X` = B · `Enter` = Start · `Shift` = Select · `P` = cycle palette (green / pocket / grayscale / dusk) · `Esc` = quit.
 Battery saves are written next to the ROM as `<rom>.sav`. (Click the window first so it has keyboard focus.)
 
-> On a Game Boy, "jump" isn't a dedicated key — it's the **A** button, and each game decides what A does. The D-pad's *up* is for climbing/menus, which is why Up doesn't jump. Mapping `Z`/`X` to A/B is the standard Game Boy-emulator convention; `Space` is added as a friendlier A.
+> On a Game Boy, "jump" isn't a dedicated key - it's the **A** button, and each game decides what A does. The D-pad's *up* is for climbing/menus, which is why Up doesn't jump. Mapping `Z`/`X` to A/B is the standard Game Boy-emulator convention; `Space` is added as a friendlier A.
 
 ### Browser (WebAssembly)
 
@@ -75,18 +75,18 @@ Saves persist automatically to the browser's `localStorage`. Same controls as ab
 
 ```
 ferrisboy/
-├── core/        ferrisboy-core — the emulator, pure logic, zero deps, no_std-friendly
+├── core/        ferrisboy-core - the emulator, pure logic, zero deps, no_std-friendly
 │   └── src/
 │       ├── cpu/       LR35902: opcode tables (mod.rs) + ALU/flags (alu.rs) + registers
-│       ├── mmu.rs     the bus — routes every address to the right component
+│       ├── mmu.rs     the bus - routes every address to the right component
 │       ├── ppu.rs     LCD: background / window / sprites → framebuffer
 │       ├── apu.rs     4 sound channels → resampled stereo stream
 │       ├── cartridge.rs   header parse + MBC1/2/3/5 banking + battery RAM
 │       ├── timer.rs   DIV / TIMA with falling-edge increment
 │       ├── joypad.rs · serial.rs · interrupts.rs
 │       └── lib.rs     the public API: GameBoy::{new, run_frame, framebuffer, set_button, take_audio, save_data}
-├── desktop/     ferrisboy-desktop — native window + keyboard + audio (minifb, cpal, rfd)
-├── web/         ferrisboy-web — wasm-bindgen + canvas + Web Audio
+├── desktop/     ferrisboy-desktop - native window + keyboard + audio (minifb, cpal, rfd)
+├── web/         ferrisboy-web - wasm-bindgen + canvas + Web Audio
 └── core/examples/run_rom.rs   headless test harness (serial capture + PNG dump)
 ```
 
@@ -96,14 +96,14 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the design and the emulat
 
 ## How it's tested
 
-The core is verified headlessly — no window required — by `core/examples/run_rom.rs`, which boots a ROM, captures the serial port (where Blargg's ROMs print results), and can dump the framebuffer to PNG for visual diffing:
+The core is verified headlessly - no window required - by `core/examples/run_rom.rs`, which boots a ROM, captures the serial port (where Blargg's ROMs print results), and can dump the framebuffer to PNG for visual diffing:
 
 ```sh
-# CPU conformance — prints "Passed"
+# CPU conformance - prints "Passed"
 cargo run -p ferrisboy-core --example run_rom -- \
   test-roms/blargg/cpu_instrs/cpu_instrs.gb --until-serial --serial
 
-# PPU conformance — writes a PNG you can compare to the reference
+# PPU conformance - writes a PNG you can compare to the reference
 cargo run -p ferrisboy-core --example run_rom -- \
   test-roms/dmg-acid2.gb --frames 120 --png acid2.png
 ```
@@ -112,18 +112,18 @@ cargo run -p ferrisboy-core --example run_rom -- \
 
 ## Limitations (honest list)
 
-- **DMG only** — original Game Boy. No Game Boy Color (CGB) modes yet.
-- **Instruction-stepped timing** — peripherals advance once per CPU instruction, not per memory access. This passes `cpu_instrs`, `instr_timing`, `dmg-acid2`, and runs commercial games correctly, but not the sub-instruction `mem_timing` suite.
-- **Mappers** — MBC1/2/3/5 are supported; MBC3's real-time clock registers are accepted but not ticked. MBC6/MBC7/HuC are not supported.
+- **DMG only** - original Game Boy. No Game Boy Color (CGB) modes yet.
+- **Instruction-stepped timing** - peripherals advance once per CPU instruction, not per memory access. This passes `cpu_instrs`, `instr_timing`, `dmg-acid2`, and runs commercial games correctly, but not the sub-instruction `mem_timing` suite.
+- **Mappers** - MBC1/2/3/5 are supported; MBC3's real-time clock registers are accepted but not ticked. MBC6/MBC7/HuC are not supported.
 - No link-cable networking; no save states (battery RAM persistence only).
 
 ## Credits
 
-- [Pan Docs](https://gbdev.io/pandocs/) — the community Game Boy hardware reference.
-- [gbdev opcode table](https://gbdev.io/gb-opcodes/Opcodes.json) — machine-readable opcode data used to generate the decoder.
-- **Blargg** — the `cpu_instrs` / `instr_timing` / `dmg_sound` test ROMs.
-- **Matt Currie** — the [`dmg-acid2`](https://github.com/mattcurrie/dmg-acid2) PPU test.
+- [Pan Docs](https://gbdev.io/pandocs/) - the community Game Boy hardware reference.
+- [gbdev opcode table](https://gbdev.io/gb-opcodes/Opcodes.json) - machine-readable opcode data used to generate the decoder.
+- **Blargg** - the `cpu_instrs` / `instr_timing` / `dmg_sound` test ROMs.
+- **Matt Currie** - the [`dmg-acid2`](https://github.com/mattcurrie/dmg-acid2) PPU test.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT - see [`LICENSE`](LICENSE).

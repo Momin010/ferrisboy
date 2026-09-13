@@ -1,7 +1,7 @@
 # ferrisboy-web
 
 The WebAssembly browser frontend for the ferrisboy Game Boy emulator. Open a
-page, drop in a `.gb` ROM, and play — with picture, sound, and keyboard input,
+page, drop in a `.gb` ROM, and play - with picture, sound, and keyboard input,
 zero install.
 
 ## Build
@@ -20,7 +20,7 @@ This produces `web/pkg/ferrisboy_web.js` (the JS glue) and
 
 ## Run
 
-ES modules and WebAssembly will **not** load over `file://` — you must serve the
+ES modules and WebAssembly will **not** load over `file://` - you must serve the
 `web/` directory over HTTP. The simplest option:
 
 ```sh
